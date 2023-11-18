@@ -13,46 +13,56 @@ type ProductFetcher struct {
 }
 
 func (f *ProductFetcher) FetchProducts(ctx context.Context, params GetProductParam) ([]product.Product, error) {
-	var (
-		allProducts []product.Product
-		mu          sync.Mutex
-		pool        = workerpool.New(f.workerCount) // Initialize the worker pool with the given number of workers
-	)
+	var allProducts []product.Product
+	var totalFetched int
+	mu := sync.Mutex{}
+	pool := workerpool.New(f.workerCount)
 
-	productsPerPage := 25 // Assumed number of products per page
-	totalPageCount := (int(params.Limit) / productsPerPage) + 1
+	totalPages := (int(params.Limit) / 25) + 1
+	productsToFetch := int(params.Limit)
 
-	for page := 1; page <= totalPageCount; page++ {
-		currentPage := page // Capture the current page for the closure
+	for page := 1; page <= totalPages; page++ {
+		currentPage := page
+
 		pool.Submit(func(ctx context.Context) error {
+			if totalFetched >= productsToFetch {
+				return nil // Skip if already fetched enough products
+			}
+
 			searchParams := product.TokopediaSearchParams{
 				Query:     params.Category,
 				Page:      currentPage,
-				SortOrder: "5", // Assuming "5" is the sort order you want to use
+				SortOrder: "5",
 			}
 
 			products, err := f.productDomain.GetTokopediaProducts(ctx, searchParams)
 			if err != nil {
-				return err // Handle error appropriately
+				return err
 			}
 
 			mu.Lock()
-			allProducts = append(allProducts, products...)
-			mu.Unlock()
+			defer mu.Unlock()
+
+			// Determine the number of products to add
+			productsToAdd := min(len(products), productsToFetch-totalFetched)
+			allProducts = append(allProducts, products[:productsToAdd]...)
+			totalFetched += productsToAdd
 
 			return nil
 		})
 	}
 
-	// Wait for all the workers to finish
 	if err := pool.Run(ctx); err != nil {
 		return nil, err
 	}
 
-	// Trim the results if more products were fetched than needed
-	if len(allProducts) > int(params.Limit) {
-		allProducts = allProducts[:params.Limit]
-	}
-
 	return allProducts, nil
+}
+
+// Helper function to find the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

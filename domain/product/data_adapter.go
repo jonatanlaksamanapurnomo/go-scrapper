@@ -75,8 +75,9 @@ func (rsc Resource) GetTokopediaProducts(ctx context.Context, params TokopediaSe
 		if len(newProducts) == prevProductsCount {
 			break
 		}
-		prevProductsCount = len(newProducts)
 
+		prevProductsCount = len(newProducts)
+		fmt.Println(len(newProducts))
 		products = append(products, newProducts...)
 	}
 
