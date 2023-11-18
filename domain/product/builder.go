@@ -1,12 +1,11 @@
 package product
 
 import (
-	"context"
 	"github.com/PuerkitoBio/goquery"
 	"strings"
 )
 
-func parseHTML(ctx context.Context, html string) (resp []Product, err error) {
+func buildProductFromHTML(html string) (resp []Product, err error) {
 	var products []Product
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))

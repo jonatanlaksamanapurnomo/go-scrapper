@@ -44,7 +44,7 @@ func (rsc Resource) GetTokopediaProducts(ctx context.Context, url string) (resp 
 		return resp, err
 	}
 
-	products, err := parseHTML(ctxWithTimeout, htmlContent)
+	products, err := buildProductFromHTML(htmlContent)
 	if err != nil {
 		return resp, err
 	}
