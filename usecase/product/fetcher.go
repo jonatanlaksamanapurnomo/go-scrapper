@@ -7,12 +7,12 @@ import (
 	"toped-scrapper/pkg/workerpool"
 )
 
-type TokopediaFetcher struct {
+type ProductFetcher struct {
 	productDomain product.DomainItf
 	workerCount   int
 }
 
-func (f *TokopediaFetcher) FetchProducts(ctx context.Context, params GetProductParam) ([]product.Product, error) {
+func (f *ProductFetcher) FetchProducts(ctx context.Context, params GetProductParam) ([]product.Product, error) {
 	var (
 		allProducts []product.Product
 		mu          sync.Mutex

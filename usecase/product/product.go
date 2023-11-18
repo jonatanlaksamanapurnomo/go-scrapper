@@ -13,7 +13,7 @@ func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductPar
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	fetcher := &TokopediaFetcher{
+	fetcher := &ProductFetcher{
 		productDomain: uc.productDomain,
 		workerCount:   params.Worker,
 	}
@@ -23,11 +23,13 @@ func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductPar
 		return nil, err
 	}
 
-	for _, product := range products {
-		if err := uc.productDomain.InsertTokopediaProduct(ctx, product); err != nil {
-			continue
-		}
+	inserter := &ProductInserter{
+		productDomain: uc.productDomain,
+		workerCount:   params.Worker,
 	}
+
+	inserter.InsertProducts(ctx, products)
+
 	// Generate CSV after all products have been inserted and fetched
 	return uc.GenerateCSV(products)
 }
