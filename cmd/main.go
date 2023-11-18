@@ -19,6 +19,7 @@ func main() {
 	products, err := productUsecase.GetTokopediaProduct(context.Background(), ucproduct.GetProductParam{
 		Category: "handphone",
 		Limit:    100,
+		Worker:   5,
 	})
 	fmt.Println(len(products), err)
 }

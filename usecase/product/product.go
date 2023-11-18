@@ -2,6 +2,9 @@ package ucproduct
 
 import (
 	"context"
+	"encoding/csv"
+	"fmt"
+	"os"
 	"sync"
 	"time"
 	"toped-scrapper/domain/product"
@@ -15,7 +18,7 @@ func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductPar
 	var (
 		products []product.Product
 		mu       sync.Mutex
-		pool     = workerpool.New(5) // Use a worker pool with 5 workers
+		pool     = workerpool.New(params.Worker) // Use a worker pool with 5 workers
 	)
 
 	page := 1
@@ -51,6 +54,38 @@ func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductPar
 	// If more products were fetched than needed, trim the slice
 	if len(products) > int(params.Limit) {
 		products = products[:params.Limit]
+	}
+
+	return uc.GenerateCSV(products)
+}
+
+func (uc *Usecase) GenerateCSV(products []product.Product) ([]product.Product, error) {
+	// Generating a timestamped filename
+	timestamp := time.Now().Format("20060102-150405") // YYYYMMDD-HHMMSS format
+	filename := fmt.Sprintf("outputs/products-%s.csv", timestamp)
+
+	// Create a new CSV file with the timestamped name
+	file, err := os.Create(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Write the header
+	header := []string{"Name", "Description", "ImageLink", "Rating", "Price", "StoreName"}
+	if err := writer.Write(header); err != nil {
+		return nil, err
+	}
+
+	// Write product data
+	for _, p := range products {
+		row := []string{p.Name, p.Description, p.ImageLink, p.Rating, p.Price, p.StoreName}
+		if err := writer.Write(row); err != nil {
+			return nil, err
+		}
 	}
 
 	return products, nil
