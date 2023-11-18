@@ -2,8 +2,6 @@ package ucproduct
 
 import (
 	"context"
-	"math"
-	"sync"
 	"time"
 	"toped-scrapper/domain/product"
 )
@@ -12,52 +10,57 @@ func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductPar
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	// Channel to collect products
-	productsCh := make(chan []product.Product)
-	// Channel to communicate errors
-	errCh := make(chan error)
+	var products []product.Product
+	productsChan := make(chan []product.Product)
+	errChan := make(chan error)
+	doneChan := make(chan bool)
 
-	// WaitGroup to synchronize goroutines
-	var wg sync.WaitGroup
-
-	// Determining the number of pages to fetch based on the limit
-	pagesToFetch := int(math.Ceil(float64(params.Limit) / float64(25)))
-	for i := 0; i < pagesToFetch; i++ {
-		wg.Add(1)
+	// Start 5 worker goroutines
+	for i := 0; i < 5; i++ {
 		go func(page int) {
-			defer wg.Done()
-			fetchedProducts, err := uc.productDomain.GetTokopediaProducts(ctx, product.TokopediaSearchParams{
-				Query:     params.Category,
-				Page:      page,
-				SortOrder: "5",
-			})
-			if err != nil {
-				errCh <- err
-				return
+			for {
+				select {
+				case <-ctx.Done():
+					return // Exit the goroutine if context is cancelled
+				case <-doneChan:
+					return // Exit the goroutine if work is done
+				default:
+					tempProducts, err := uc.productDomain.GetTokopediaProducts(ctx, product.TokopediaSearchParams{
+						Query:     params.Category,
+						Page:      page,
+						SortOrder: "5",
+					})
+					if err != nil {
+						errChan <- err
+						return
+					}
+					productsChan <- tempProducts
+				}
 			}
-			productsCh <- fetchedProducts
-		}(i + 1) // page starts from 1
+		}(i + 1)
 	}
 
-	// Close channels once all goroutines are done
-	go func() {
-		wg.Wait()
-		close(productsCh)
-		close(errCh)
-	}()
-
-	var products []product.Product
-	for {
+	// Collect results and handle errors
+	remaining := params.Limit
+	for remaining > 0 {
 		select {
-		case fetchedProducts := <-productsCh:
-			products = append(products, fetchedProducts...)
-			if len(products) >= int(params.Limit) {
-				return products[:params.Limit], nil
-			}
-		case err := <-errCh:
+		case err := <-errChan:
+			close(doneChan) // Stop all workers on error
 			return nil, err
-		case <-ctx.Done():
-			return nil, ctx.Err()
+		case p := <-productsChan:
+			products = append(products, p...)
+			remaining -= len(p)
+			if remaining <= 0 {
+				close(doneChan) // Signal workers to stop
+				break
+			}
 		}
 	}
+
+	// If we have more products than the limit, trim the slice to the limit
+	if len(products) > params.Limit {
+		products = products[:params.Limit]
+	}
+
+	return products, nil
 }
