@@ -15,7 +15,7 @@ func (rsc Resource) GetTokopediaProducts(ctx context.Context, params TokopediaSe
 	baseURL := "https://www.tokopedia.com/search"
 	queryValues := url.Values{}
 	queryValues.Set("q", params.Query)
-	queryValues.Set("page", strconv.Itoa(int(params.Page)))
+	queryValues.Set("page", strconv.Itoa(params.Page))
 	queryValues.Set("ob", params.SortOrder)
 	// Add other query parameters as needed
 

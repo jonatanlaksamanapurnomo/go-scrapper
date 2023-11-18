@@ -29,6 +29,6 @@ type Product struct {
 
 type TokopediaSearchParams struct {
 	Query     string
-	Page      int64
+	Page      int
 	SortOrder string
 }

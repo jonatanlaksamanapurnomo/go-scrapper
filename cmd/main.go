@@ -16,10 +16,9 @@ func main() {
 	initDomains()
 	initUsecase()
 
-	products, err := productUsecase.GetTokopediaProduct(context.Background(), product.TokopediaSearchParams{
-		Query:     "handphone",
-		Page:      1,
-		SortOrder: "5",
+	products, err := productUsecase.GetTokopediaProduct(context.Background(), ucproduct.GetProductParam{
+		Category: "handphone",
+		Limit:    60,
 	})
 	fmt.Println(len(products), err)
 }
