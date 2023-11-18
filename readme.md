@@ -33,3 +33,9 @@ These instructions will guide you through setting up and running Toped-Scrapper 
 
 ## Terimnal Output 
 ![Screenshot 2023-11-18 163124](https://github.com/jonatanlaksamanapurnomo/go-scrapper/assets/39803159/80e091c6-8012-49da-8df2-5dbce9298046)
+
+## Database Proff 
+![image](https://github.com/jonatanlaksamanapurnomo/go-scrapper/assets/39803159/ecbdc9da-62c6-48ac-a2b3-4906348cc977)
+
+## CSV Can be seen at outputs folder 
+
