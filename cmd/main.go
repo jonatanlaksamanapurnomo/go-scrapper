@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"toped-scrapper/domain/product"
 	"toped-scrapper/pkg/database/postgres"
@@ -16,12 +14,12 @@ var (
 
 func main() {
 	Init()
-	products, err := productUsecase.GetTokopediaProduct(context.Background(), ucproduct.GetProductParam{
-		Category: "handphone",
-		Limit:    100,
-		Worker:   5,
-	})
-	fmt.Println(len(products), err)
+	//products, err := productUsecase.GetTokopediaProduct(context.Background(), ucproduct.GetProductParam{
+	//	Category: "handphone",
+	//	Limit:    100,
+	//	Worker:   5,
+	//})
+	//fmt.Println(len(products), err)
 }
 
 func Init() {
@@ -31,6 +29,10 @@ func Init() {
 	}
 	defer dbHandler.Close()
 
+	err = dbHandler.CheckAndCreateTable()
+	if err != nil {
+		log.Fatal(err)
+	}
 	initDomains()
 	initUsecase()
 }
