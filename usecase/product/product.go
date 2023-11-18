@@ -2,63 +2,54 @@ package ucproduct
 
 import (
 	"context"
+	"sync"
 	"time"
 	"toped-scrapper/domain/product"
+	"toped-scrapper/pkg/workerpool"
 )
 
 func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductParam) ([]product.Product, error) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	var products []product.Product
-	productsChan := make(chan []product.Product)
-	errChan := make(chan error)
-	doneChan := make(chan bool)
+	var (
+		products []product.Product
+		mu       sync.Mutex
+		pool     = workerpool.New(5) // Use a worker pool with 5 workers
+	)
 
-	// Start 5 worker goroutines
-	for i := 0; i < 5; i++ {
-		go func(page int) {
-			for {
-				select {
-				case <-ctx.Done():
-					return // Exit the goroutine if context is cancelled
-				case <-doneChan:
-					return // Exit the goroutine if work is done
-				default:
-					tempProducts, err := uc.productDomain.GetTokopediaProducts(ctx, product.TokopediaSearchParams{
-						Query:     params.Category,
-						Page:      page,
-						SortOrder: "5",
-					})
-					if err != nil {
-						errChan <- err
-						return
-					}
-					productsChan <- tempProducts
-				}
+	page := 1
+	productsPerPage := 25
+
+	for len(products) < int(params.Limit) && page <= (int(params.Limit)/productsPerPage)+1 {
+		currentPage := page
+		pool.Submit(func(ctx context.Context) error {
+			tempProducts, err := uc.productDomain.GetTokopediaProducts(ctx, product.TokopediaSearchParams{
+				Query:     params.Category,
+				Page:      currentPage,
+				SortOrder: "5",
+			})
+			if err != nil {
+				return err // Handle error appropriately
 			}
-		}(i + 1)
+
+			mu.Lock()
+			products = append(products, tempProducts...)
+			mu.Unlock()
+
+			return nil
+		})
+
+		page++
 	}
 
-	// Collect results and handle errors
-	remaining := params.Limit
-	for remaining > 0 {
-		select {
-		case err := <-errChan:
-			close(doneChan) // Stop all workers on error
-			return nil, err
-		case p := <-productsChan:
-			products = append(products, p...)
-			remaining -= len(p)
-			if remaining <= 0 {
-				close(doneChan) // Signal workers to stop
-				break
-			}
-		}
+	// Run the worker pool
+	if err := pool.Run(ctx); err != nil {
+		return nil, err
 	}
 
-	// If we have more products than the limit, trim the slice to the limit
-	if len(products) > params.Limit {
+	// If more products were fetched than needed, trim the slice
+	if len(products) > int(params.Limit) {
 		products = products[:params.Limit]
 	}
 
