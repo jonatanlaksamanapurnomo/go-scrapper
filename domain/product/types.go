@@ -1,6 +1,9 @@
 package product
 
-import "context"
+import (
+	"context"
+	"toped-scrapper/pkg/database/postgres"
+)
 
 type DomainItf interface {
 	GetTokopediaProducts(ctx context.Context, params TokopediaSearchParams) ([]Product, error)
@@ -9,6 +12,7 @@ type DomainItf interface {
 type ResourceItf interface {
 	GetTokopediaProducts(ctx context.Context, params TokopediaSearchParams) ([]Product, error)
 	GetTokopediaProductsByURL(ctx context.Context, url string) ([]Product, error)
+	InsertProductDB(ctx context.Context, product Product) error
 }
 
 type Domain struct {
@@ -16,6 +20,7 @@ type Domain struct {
 }
 
 type Resource struct {
+	db postgres.PostgresHandler
 }
 
 type Product struct {

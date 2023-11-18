@@ -27,18 +27,17 @@ func Init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dbHandler.Close()
 
 	err = dbHandler.CheckAndCreateTable()
 	if err != nil {
 		log.Fatal(err)
 	}
-	initDomains()
+	initDomains(*dbHandler)
 	initUsecase()
 }
 
-func initDomains() {
-	productDomain = product.InitDomain(product.InitResource())
+func initDomains(db postgres.PostgresHandler) {
+	productDomain = product.InitDomain(product.InitResource(db))
 }
 
 func initUsecase() {
