@@ -77,7 +77,7 @@ func (rsc Resource) GetTokopediaProducts(ctx context.Context, params TokopediaSe
 		}
 
 		prevProductsCount = len(newProducts)
-		fmt.Println(len(newProducts))
+		fmt.Println("Worker Fetch : ", len(newProducts))
 		products = append(products, newProducts...)
 	}
 

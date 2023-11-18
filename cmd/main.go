@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/manifoldco/promptui"
+	"github.com/schollz/progressbar/v3"
 	"log"
 	"strconv"
+	"time"
 	"toped-scrapper/domain/product"
 	"toped-scrapper/pkg/database/postgres"
 	ucproduct "toped-scrapper/usecase/product"
@@ -24,6 +26,16 @@ func main() {
 	limit := PromptForNumber("Enter limit of products to fetch (default 100): ", 100)
 	worker := PromptForNumber("Enter number of workers (default 5): ", 5)
 
+	// Starting the progress bar
+	bar := progressbar.Default(-1, "Fetching products...")
+	go func() {
+		for {
+			time.Sleep(100 * time.Millisecond)
+			bar.Add(1)
+		}
+	}()
+
+	// Fetching products
 	products, err := productUsecase.GetTokopediaProduct(context.Background(), ucproduct.GetProductParam{
 		Category: category,
 		Limit:    limit,
@@ -32,6 +44,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error fetching products: %v", err)
 	}
+	bar.Finish()
 
 	fmt.Printf("\nFetched %d products\n", len(products))
 	fmt.Printf("Check outputs folder for csv \n")
