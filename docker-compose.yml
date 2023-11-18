@@ -1,13 +1,23 @@
 version: '3.8'
+
 services:
   postgres:
-    image: postgres
+    image: postgres:latest
+    restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_USER: 'postgre'        # Replace with your desired username
+      POSTGRES_PASSWORD: 'mysecretpassword' # Replace with your desired password
+      POSTGRES_DB: 'go_scrapper'             # Replace with your desired database name
     ports:
       - "5432:5432"
     volumes:
       - my_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgre"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
 volumes:
   my_postgres_data:

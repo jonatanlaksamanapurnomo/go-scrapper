@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/chromedp/chromedp v0.9.3
+	github.com/lib/pq v1.10.9
 )
 
 require (
