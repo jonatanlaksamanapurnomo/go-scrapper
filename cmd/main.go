@@ -20,9 +20,9 @@ func main() {
 	Init()
 
 	// Interactive prompts
-	category := promptForInput("Enter product category (e.g., handphone): ")
-	limit := promptForNumber("Enter limit of products to fetch (e.g., 100): ")
-	worker := promptForNumber("Enter number of workers (e.g., 5): ")
+	category := PromptForString("Enter product category (default handphone): ", "handphone")
+	limit := PromptForNumber("Enter limit of products to fetch (default 100): ", 100)
+	worker := PromptForNumber("Enter number of workers (default 5): ", 5)
 
 	products, err := productUsecase.GetTokopediaProduct(context.Background(), ucproduct.GetProductParam{
 		Category: category,
@@ -40,40 +40,6 @@ func main() {
 		fmt.Printf("Name: %s, Price: %s\n", p.Name, p.Price)
 		// Add more details if needed
 	}
-}
-
-func promptForInput(label string) string {
-	prompt := promptui.Prompt{
-		Label: label,
-	}
-	result, err := prompt.Run()
-	if err != nil {
-		log.Fatalf("Prompt failed %v\n", err)
-	}
-	return result
-}
-
-func promptForNumber(label string) int {
-	validate := func(input string) error {
-		_, err := strconv.Atoi(input)
-		if err != nil {
-			return fmt.Errorf("invalid number")
-		}
-		return nil
-	}
-
-	prompt := promptui.Prompt{
-		Label:    label,
-		Validate: validate,
-	}
-
-	result, err := prompt.Run()
-	if err != nil {
-		log.Fatalf("Prompt failed %v\n", err)
-	}
-
-	number, _ := strconv.Atoi(result)
-	return number
 }
 
 func Init() {
@@ -96,4 +62,38 @@ func initDomains(db postgres.PostgresHandler) {
 
 func initUsecase() {
 	productUsecase = ucproduct.InitUsecase(productDomain)
+}
+
+func PromptForString(label string, defaultValue string) string {
+	prompt := promptui.Prompt{
+		Label:   label,
+		Default: defaultValue,
+	}
+	result, err := prompt.Run()
+	if err != nil {
+		log.Fatalf("Prompt failed %v\n", err)
+	}
+	return result
+}
+
+func PromptForNumber(label string, defaultValue int) int {
+	prompt := promptui.Prompt{
+		Label:   label,
+		Default: strconv.Itoa(defaultValue),
+		Validate: func(input string) error {
+			_, err := strconv.Atoi(input)
+			if err != nil {
+				return fmt.Errorf("invalid number")
+			}
+			return nil
+		},
+	}
+
+	result, err := prompt.Run()
+	if err != nil {
+		log.Fatalf("Prompt failed %v\n", err)
+	}
+
+	number, _ := strconv.Atoi(result)
+	return number
 }
