@@ -62,7 +62,14 @@ func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductPar
 func (uc *Usecase) GenerateCSV(products []product.Product) ([]product.Product, error) {
 	// Generating a timestamped filename
 	timestamp := time.Now().Format("20060102-150405") // YYYYMMDD-HHMMSS format
-	filename := fmt.Sprintf("outputs/products-%s.csv", timestamp)
+	outputPath := "outputs"
+	filename := fmt.Sprintf("%s/products-%s.csv", outputPath, timestamp)
+
+	// Ensure the output directory exists
+	err := os.MkdirAll(outputPath, os.ModePerm) // os.ModePerm is 0777, which means read, write & execute for everyone
+	if err != nil {
+		return nil, err
+	}
 
 	// Create a new CSV file with the timestamped name
 	file, err := os.Create(filename)
