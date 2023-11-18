@@ -37,8 +37,11 @@ func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductPar
 			}
 
 			mu.Lock()
-			products = append(products, tempProducts...)
-			mu.Unlock()
+			defer mu.Unlock()
+
+			for _, product := range tempProducts {
+				products = append(products, product)
+			}
 
 			return nil
 		})
@@ -56,6 +59,12 @@ func (uc *Usecase) GetTokopediaProduct(ctx context.Context, params GetProductPar
 		products = products[:params.Limit]
 	}
 
+	for _, product := range products {
+		if err := uc.productDomain.InsertTokopediaProduct(ctx, product); err != nil {
+			continue
+		}
+	}
+	// Generate CSV after all products have been inserted and fetched
 	return uc.GenerateCSV(products)
 }
 

@@ -7,6 +7,7 @@ import (
 
 type DomainItf interface {
 	GetTokopediaProducts(ctx context.Context, params TokopediaSearchParams) ([]Product, error)
+	InsertTokopediaProduct(ctx context.Context, product Product) error
 }
 
 type ResourceItf interface {

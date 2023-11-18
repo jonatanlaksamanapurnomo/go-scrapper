@@ -14,10 +14,9 @@ func (d *Domain) GetTokopediaProducts(ctx context.Context, params TokopediaSearc
 }
 
 func (d *Domain) InsertTokopediaProduct(ctx context.Context, product Product) error {
-	// Call the InsertProductDB function from the Resource layer
 	err := d.resource.InsertProductDB(ctx, product)
 	if err != nil {
-		return err // Propagate the error upward for handling
+		return err
 	}
 
 	return nil
