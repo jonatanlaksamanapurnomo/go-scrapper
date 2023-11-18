@@ -3,11 +3,12 @@ package product
 import "context"
 
 type DomainItf interface {
-	GetProduct(ctx context.Context, url string) (resp []Product, err error)
+	GetTokopediaProducts(ctx context.Context, params TokopediaSearchParams) ([]Product, error)
 }
 
 type ResourceItf interface {
-	GetTokopediaProducts(ctx context.Context, url string) (resp []Product, err error)
+	GetTokopediaProducts(ctx context.Context, params TokopediaSearchParams) ([]Product, error)
+	GetTokopediaProductsByURL(ctx context.Context, url string) ([]Product, error)
 }
 
 func InitDomain(rsc ResourceItf) *Domain {

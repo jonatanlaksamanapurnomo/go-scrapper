@@ -12,8 +12,12 @@ var (
 
 func main() {
 	initDomains()
-	products, err := productDomain.GetProduct(context.Background(), "https://www.tokopedia.com/search?q=handphone&source=search&srp_component_id=04.06.00.00&st=product")
-	fmt.Print(fmt.Sprintf("%+v", products[0]), len(products), err)
+	products, err := productDomain.GetTokopediaProducts(context.Background(), product.TokopediaSearchParams{
+		Query:     "handphone",
+		Page:      1,
+		SortOrder: "5",
+	})
+	fmt.Print(products[0], err)
 }
 
 func initDomains() {

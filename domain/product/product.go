@@ -4,10 +4,10 @@ import (
 	"context"
 )
 
-func (d Domain) GetProduct(ctx context.Context, url string) (resp []Product, err error) {
-	products, err := d.resource.GetTokopediaProducts(ctx, url)
+func (d Domain) GetTokopediaProducts(ctx context.Context, params TokopediaSearchParams) ([]Product, error) {
+	products, err := d.resource.GetTokopediaProducts(ctx, params)
 	if err != nil {
-		return resp, err
+		return nil, err
 	}
 
 	return products, nil
